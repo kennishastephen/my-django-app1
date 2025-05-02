@@ -1,18 +1,20 @@
-
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Task
-from datetime import date
+from .forms import TaskForm
 
-def task_list(request):
-    today = date.today()
-    tasks = Task.objects.filter(created_at=today)
-    total = tasks.count()
-    completed = tasks.filter(completed=True).count()
-    not_completed = total - completed
+def index(request):
+    tasks = Task.objects.all()
+    form = TaskForm()
 
-    return render(request, 'todo/task_list.html', {
-        'tasks': tasks,
-        'total': total,
-        'completed': completed,
-        'not_completed': not_completed
-    })
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+
+    return render(request, 'todo/index.html', {'tasks': tasks, 'form': form})
+
+def delete_task(request, task_id):
+    task = Task.objects.get(id=task_id)
+    task.delete()
+    return redirect('index')
